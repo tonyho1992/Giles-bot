@@ -33,10 +33,10 @@ module Bot
             # Global
             if message.body.match /hey/ or message.body.match /hello/
                 # Just a greeting
-                return [buildMessage sender, "Giles: Hello "+senderName]
+                return [(buildMessage sender, ("Giles: Hello "+senderName))]
             else
                 # Default / Give up
-                return [buildMessage sender, "Giles: Sorry "+senderName+", I can't help you with that."]
+                return [(buildMessage sender, ("Giles: Sorry "+senderName+", I can't help you with that."))]
             end
 
         end
