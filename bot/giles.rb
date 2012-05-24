@@ -4,9 +4,9 @@ require 'github_api'
 
 module Bot
     class Giles
-        def initialize(username, repo)
+        def initialize(username, password)
             @username  = username
-            @repo      = repo
+            @password  = password
             @log       = Logger.new(STDOUT)
             @log.level = Logger::DEBUG
         end
@@ -20,18 +20,55 @@ module Bot
             return []
         end
 
+        def handleRepos(requester)
+            repos = @github.repos.all.map { |repo| repo.name }
+            return [(buildMessage requester, ("Giles: Here are you current repositories: " + repos.join(", ")))]
+        end
+
+        def handleCommits(requester)
+            repo = "Giles-bot"
+            commits_raw = @github.repos.commits.all "tonyho1992", repo
+            commits = commits_raw.map { |commit_data| commit_data.commit.message }
+            return [(buildMessage requester, ("Giles: Here are you current commits for " + repo + ": " + commits.join(", ")))]
+        end
+
         def onQuery(message)
             senderName = message.from.node.to_s
             sender = message.from.stripped
+            queryText = message.body
 
-            @log.debug "[Giles]: " + @username + "/" + @repo
+            # TODO Parse the following
+            # Repo - "on repo"
+            # Commits - "commits / all commits" / "last commit"
+            # Branch - "on branch"
+            # Issues - "all"
+            # look into hooks
 
-            github = Github.new
-
-            # TODO handle Github queries
+            @github = Github.new basic_auth: @username + ":" + @password
 
             # Global
-            if message.body.match /hey/ or message.body.match /hello/
+            if queryText.match /repo/i
+                @log.debug "[Giles]: Retrieving Repositories"
+
+                # yield (buildMessage sender, "Giles: Working on your repositories...")
+
+                return handleRepos sender
+            elsif queryText.match /commit/i
+                @log.debug "[Giles]: Retrieving Repositories"
+
+                yield (buildMessage sender, "Giles: Working on your commits...")
+
+                return handleCommits sender
+            elsif queryText.match /branch/i
+                yield (buildMessage sender, "Giles: Working on your branches...")
+                return handleBranches sender
+            elsif queryText.match /pull request/i
+                yield (buildMessage sender, "Giles: Working on your pull requests...")
+                return handlePullRequests sender
+            elsif queryText.match /hook/i
+                yield (buildMessage sender, "Giles: Working on your hooks...")
+                return handleHookRequests sender
+            elsif queryText.match /hey/i or queryText.match /hello/i
                 # Just a greeting
                 return [(buildMessage sender, ("Giles: Hello "+senderName))]
             else

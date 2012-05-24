@@ -12,10 +12,10 @@ log.level = Logger::DEBUG
 # Login info
 botUsername = ''
 botPassword = ''
-githubUsername = 'peter-murach'
-githubRepo = 'github-api'
+githubUsername = ''
+githubPassword = ''
 
-giles = Bot::Giles.new(githubUsername, githubRepo)
+giles = Bot::Giles.new(githubUsername, githubPassword)
 
 setup botUsername, botPassword, 'talk.google.com', 5222
 
