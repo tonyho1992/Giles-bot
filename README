@@ -1,4 +1,4 @@
-Anne
+Giles
 -------
 
 @ Tony Ho
@@ -18,9 +18,12 @@ botUsername = ''
 botPassword = ''
 
 Giles also needs your Github API key before you can use her.
-Check out http://developer.asana.com
+Check out http://peter-murach.github.com/github and
+http://developer.github.com
 
-asanaKey    = ''
+Fill in:
+
+opts with the credentials that you need
 
 in bot/mcore.rb
 
@@ -32,4 +35,4 @@ Run
 Just execute run.sh
 
 If you peek inside run.sh, you'll see that all it does is bundle exec, making
-Anne something perfectly suitable for use on Heroku. 
+Giles something perfectly suitable for use on Heroku. 

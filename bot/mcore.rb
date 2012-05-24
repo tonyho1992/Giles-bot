@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'blather/client'
 
-require './bot/anne'
+require './bot/giles'
 
 require 'logger'
 
@@ -12,9 +12,10 @@ log.level = Logger::DEBUG
 # Login info
 botUsername = ''
 botPassword = ''
-asanaKey    = ''
+githubUsername = 'peter-murach'
+githubRepo = 'github-api'
 
-anne = Bot::Anne.new(asanaKey)
+giles = Bot::Giles.new(githubUsername, githubRepo)
 
 setup botUsername, botPassword, 'talk.google.com', 5222
 
@@ -34,7 +35,7 @@ status do |s|
     fromNodeName = s.from.stripped
     log.debug "[Core]: status of "+s.from.to_s+" is "+s.state.to_s
     if not fromNodeName.to_s == botUsername
-        send_messages anne.onStatus fromNodeName
+        send_messages giles.onStatus fromNodeName
     end
 end
 
@@ -47,6 +48,6 @@ end
 # Message handling
 message :chat?, :body do |message| 
     # Pass to bots for processing
-    send_messages anne.onMessage(message) { |progressMessage| write_to_stream progressMessage }
+    send_messages giles.onMessage(message) { |progressMessage| write_to_stream progressMessage }
 end
 

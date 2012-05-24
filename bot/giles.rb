@@ -1,11 +1,12 @@
 require 'logger'
 require 'blather/stanza/message'
-require 'asana'
+require 'github_api'
 
 module Bot
-    class Anne 
-        def initialize(apiKey)
-            @apiKey    = apiKey
+    class Giles
+        def initialize(username, repo)
+            @username  = username
+            @repo      = repo
             @log       = Logger.new(STDOUT)
             @log.level = Logger::DEBUG
         end
@@ -20,18 +21,22 @@ module Bot
         end
 
         def onQuery(message)
-            # Anne Queries
             senderName = message.from.node.to_s
+            sender = message.from.stripped
 
-            # TODO handle Asana queries
+            @log.debug "[Giles]: " + @username + "/" + @repo
+
+            github = Github.new
+
+            # TODO handle Github queries
 
             # Global
             if message.body.match /hey/ or message.body.match /hello/
                 # Just a greeting
-                return buildMessage message.from.stripped ("Anne: Hello "+senderName)
+                return [buildMessage sender, "Giles: Hello "+senderName]
             else
                 # Default / Give up
-                return buildMessage message.from.stripped "Anne: Sorry "+senderName+", I can't help you with that."
+                return [buildMessage sender, "Giles: Sorry "+senderName+", I can't help you with that."]
             end
 
         end
@@ -39,7 +44,7 @@ module Bot
         def onMessage(message)
             # Query handling
             queryMsgs = []
-            if message.body.match /Anne/ or message.body.match /anne/
+            if message.body.match /giles/ or message.body.match /Giles/
                 queryMsgs = onQuery(message)
             end
 
