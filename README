@@ -1,0 +1,35 @@
+Anne
+-------
+
+@ Tony Ho
+
+A Google Talk Robot with Eyes on Github
+
+Install 
+-------
+
+Giles uses bundler to get her deps. 
+Use 'bundle install' to set things up.
+
+You'll need to provide Gtalk credentials for Giles:
+
+Fill in: 
+botUsername = ''
+botPassword = ''
+
+Giles also needs your Github API key before you can use her.
+Check out http://developer.asana.com
+
+asanaKey    = ''
+
+in bot/mcore.rb
+
+You can customise Giles's behavior in giles.rb
+
+Run
+---
+
+Just execute run.sh
+
+If you peek inside run.sh, you'll see that all it does is bundle exec, making
+Anne something perfectly suitable for use on Heroku. 
