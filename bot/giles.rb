@@ -2,6 +2,14 @@ require 'logger'
 require 'blather/stanza/message'
 require 'github_api'
 
+class String
+    def query=(temp)
+    end
+    def split(temp)
+        return []
+    end
+end
+
 module Bot
     class Giles
         def initialize(username, password)
