@@ -44,21 +44,31 @@ module Bot
 
         def handleRepos(requester)
             repos = (@github.repos.all.map { |repo| repo.name }).sort
-            return [(buildMessage requester, ("Giles: Here are you current repositories: " + repos.join(", ")))]
+            return [(buildMessage requester, ("Giles: Here are your current repositories: " + repos.join(", ")))]
         end
 
         def handleCommits(requester, repo)
             commits_raw = @github.repos.commits.all @login, repo
             commits = commits_raw.map { |commit_data| commit_data.commit["message"] }
-            return [(buildMessage requester, ("Giles: Here are you current commits for " + repo + ": " + commits.join(", ")))]
+            return [(buildMessage requester, ("Giles: Here are your current commits for " + repo + ": " + commits.join(", ")))]
         end
 
         def handleBranches(requester, repo)
-            pr = @github.pull_requests.all @login, repo
-            
+            branches_raw = @github.repos.branches @login, repo
+            branches = branches_raw.map { |branch| branch.name }
+            return [(buildMessage requester, ("Giles: Here are your current branches for " + repo + ": " + branches.join(", ")))]
         end
 
         def handlePullRequests(requester, repo)
+            prs_raw = @github.pull_requests.all @login, repo
+            prs = prs_raw.map { |pr| pr.title }
+            return [(buildMessage requester, ("Giles: Here are your current pullRequests for " + repo + ": " + prs.join(", ")))]
+        end
+
+        def handleIssues(requester, repo)
+            iss_raw = @github.issues.list_repo @login, repo
+            iss = iss_raw.map { |is| is.title }
+            return [(buildMessage requester, ("Giles: Here are your current issues for " + repo + ": " + iss.join(", ")))]
         end
 
         def onQuery(message)
@@ -66,40 +76,39 @@ module Bot
             sender = message.from.stripped
             queryText = message.body
 
-            # TODO Parse the following
-            # Repo - "on repo"
-            # Commits - "commits / all commits" / "last commit"
-            # Branch - "on branch"
-            # Issues - "all"
-            # look into hooks
-
             # Global
             if queryText.match /repo/i
                 @log.debug "[Giles]: Retrieving Repositories"
 
-                # yield (buildMessage sender, "Giles: Working on your repositories...")
+                yield (buildMessage sender, "Giles: Working on your repositories...")
 
                 return handleRepos sender
             elsif queryText.match /commit/i
                 @log.debug "[Giles]: Retrieving Repositories"
 
-                #yield (buildMessage sender, "Giles: Working on your commits...")
+                yield (buildMessage sender, "Giles: Working on your commits...")
 
                 repo = "Giles-bot"
 
                 return handleCommits sender, repo
             elsif queryText.match /branch/i
-                # yield (buildMessage sender, "Giles: Working on your branches...")
+                yield (buildMessage sender, "Giles: Working on your branches...")
 
                 repo = "Giles-bot"
 
                 return handleBranches sender, repo
             elsif queryText.match /pull request/i
-                # yield (buildMessage sender, "Giles: Working on your pull requests...")
+                yield (buildMessage sender, "Giles: Working on your pull requests...")
 
                 repo = "Giles-bot"
 
                 return handlePullRequests sender, repo
+            elsif queryText.match /issue/i
+                yield (buildMessage sender, "Giles: Working on your issues...")
+
+                repo = "Giles-bot"
+
+                return handleIssues sender, repo
             elsif queryText.match /hey/i or queryText.match /hello/i
                 # Just a greeting
                 return [(buildMessage sender, ("Giles: Hello "+senderName))]
@@ -108,15 +117,13 @@ module Bot
                 return [(buildMessage sender, ("Giles: Sorry "+senderName+", I can't help you with that."))]
             end
 
-            return [(buildMessage message.from.stripped, "Sorry? Is there a way I can help?")]
-
         end
 
-        def onMessage(message)
+        def onMessage(message, &onProgress)
             # Query handling
             queryMsgs = []
             if message.body.match /giles/ or message.body.match /Giles/
-                queryMsgs = onQuery(message)
+                queryMsgs = onQuery message, &onProgress
             end
 
             return queryMsgs
