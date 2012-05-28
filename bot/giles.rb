@@ -1,22 +1,36 @@
 require 'logger'
-require 'blather/stanza/message'
 require 'github_api'
 
-class String
-    def query=(temp)
-    end
-    def split(temp)
-        return []
+module Faraday
+    class Request
+        # < Struct.new(:method, :path, :params, :headers, :body, options)
+        # extend AutoloadHelper
+        # extend MiddlewareRegistry
+
+        def url(path, params = null)
+            if path.respond_to? :query and false
+                if query = path.query
+                    path = path.dup
+                    path.query = nill
+                end    
+            else
+                path, query = path.split('?', 2)
+            end
+            self.path = path
+            self.params.merge_query query
+            self.params.update(params) if params
+        end
     end
 end
 
 module Bot
     class Giles
-        def initialize(username, password)
-            @username  = username
+        def initialize(login, password)
+            @login  = login
             @password  = password
             @log       = Logger.new(STDOUT)
             @log.level = Logger::DEBUG
+            @github = Github.new basic_auth: @login + ":" + @password
         end
 
         def buildMessage(user, body) 
@@ -29,15 +43,22 @@ module Bot
         end
 
         def handleRepos(requester)
-            repos = @github.repos.all.map { |repo| repo.name }
+            repos = (@github.repos.all.map { |repo| repo.name }).sort
             return [(buildMessage requester, ("Giles: Here are you current repositories: " + repos.join(", ")))]
         end
 
-        def handleCommits(requester)
-            repo = "Giles-bot"
-            commits_raw = @github.repos.commits.all "tonyho1992", repo
-            commits = commits_raw.map { |commit_data| commit_data.commit.message }
+        def handleCommits(requester, repo)
+            commits_raw = @github.repos.commits.all @login, repo
+            commits = commits_raw.map { |commit_data| commit_data.commit["message"] }
             return [(buildMessage requester, ("Giles: Here are you current commits for " + repo + ": " + commits.join(", ")))]
+        end
+
+        def handleBranches(requester, repo)
+            pr = @github.pull_requests.all @login, repo
+            
+        end
+
+        def handlePullRequests(requester, repo)
         end
 
         def onQuery(message)
@@ -52,8 +73,6 @@ module Bot
             # Issues - "all"
             # look into hooks
 
-            @github = Github.new basic_auth: @username + ":" + @password
-
             # Global
             if queryText.match /repo/i
                 @log.debug "[Giles]: Retrieving Repositories"
@@ -64,18 +83,23 @@ module Bot
             elsif queryText.match /commit/i
                 @log.debug "[Giles]: Retrieving Repositories"
 
-                yield (buildMessage sender, "Giles: Working on your commits...")
+                #yield (buildMessage sender, "Giles: Working on your commits...")
 
-                return handleCommits sender
+                repo = "Giles-bot"
+
+                return handleCommits sender, repo
             elsif queryText.match /branch/i
-                yield (buildMessage sender, "Giles: Working on your branches...")
-                return handleBranches sender
+                # yield (buildMessage sender, "Giles: Working on your branches...")
+
+                repo = "Giles-bot"
+
+                return handleBranches sender, repo
             elsif queryText.match /pull request/i
-                yield (buildMessage sender, "Giles: Working on your pull requests...")
-                return handlePullRequests sender
-            elsif queryText.match /hook/i
-                yield (buildMessage sender, "Giles: Working on your hooks...")
-                return handleHookRequests sender
+                # yield (buildMessage sender, "Giles: Working on your pull requests...")
+
+                repo = "Giles-bot"
+
+                return handlePullRequests sender, repo
             elsif queryText.match /hey/i or queryText.match /hello/i
                 # Just a greeting
                 return [(buildMessage sender, ("Giles: Hello "+senderName))]
@@ -83,6 +107,8 @@ module Bot
                 # Default / Give up
                 return [(buildMessage sender, ("Giles: Sorry "+senderName+", I can't help you with that."))]
             end
+
+            return [(buildMessage message.from.stripped, "Sorry? Is there a way I can help?")]
 
         end
 
